@@ -1,0 +1,757 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>接接樂遊戲設計工作坊</title>
+<style>
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body {
+    margin: 0; padding: 0;
+    font-family: "PingFang TC", "Microsoft JhengHei", "Noto Sans TC", "Helvetica Neue", sans-serif;
+    background: linear-gradient(160deg, #EAF4FF 0%, #F3F8FF 50%, #FDF6EC 100%);
+    min-height: 100vh;
+    color: #2F3E52;
+    line-height: 1.6;
+  }
+  .wrap { max-width: 880px; margin: 0 auto; padding: 28px 18px 80px; }
+
+  header { text-align: center; margin-bottom: 24px; }
+  header .icon { font-size: 52px; line-height: 1; }
+  header h1 { font-size: 28px; margin: 10px 0 8px; color: #1E3A5F; letter-spacing: .5px; }
+  header p { font-size: 15px; color: #5A6B82; margin: 0; }
+
+  .step {
+    background: #fff; border-radius: 22px; padding: 22px 20px;
+    margin-bottom: 18px;
+    box-shadow: 0 10px 32px rgba(80,110,160,0.10);
+    border: 1px solid #EAF0FA;
+  }
+  .step-head { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; }
+  .step-num {
+    flex: 0 0 auto; width: 32px; height: 32px; border-radius: 50%;
+    background: linear-gradient(135deg, #5B8DEF, #4361EE);
+    color: #fff; font-weight: 800; font-size: 15px;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 4px 12px rgba(67,97,238,.32);
+  }
+  .step-head h2 { font-size: 19px; margin: 0; color: #1E3A5F; }
+  .step-head .sub {
+    font-size: 12.5px; color: #94A3B8; margin-left: auto;
+    text-align: right; line-height: 1.35;
+  }
+
+  .field { margin-bottom: 14px; }
+  .field:last-child { margin-bottom: 0; }
+  .field > label {
+    display: block; font-size: 13.5px; font-weight: 700;
+    color: #4A5E7A; margin-bottom: 6px;
+  }
+  .field .hint { font-size: 12px; color: #94A3B8; font-weight: 400; margin-left: 4px; }
+  input[type=text], textarea, select {
+    width: 100%; border: 2px solid #DDE6F3; border-radius: 13px;
+    padding: 11px 14px; font-size: 15px; font-family: inherit;
+    color: #2F3E52; background: #F8FBFF; outline: none;
+    transition: border-color .15s, background .15s;
+    resize: vertical;
+  }
+  input[type=text]:focus, textarea:focus, select:focus {
+    border-color: #7FA8F0; background: #fff;
+  }
+  textarea { min-height: 74px; line-height: 1.6; }
+
+  .game-info { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  @media (max-width: 520px) { .game-info { grid-template-columns: 1fr; } }
+
+  /* ---- 主題類型選擇 ---- */
+  .type-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 10px;
+  }
+  .type-card {
+    border: 2px solid #E4ECF8; border-radius: 16px;
+    padding: 14px 12px; text-align: center;
+    cursor: pointer; background: #FBFDFF;
+    transition: all .15s; font-family: inherit;
+    display: flex; flex-direction: column; align-items: center; gap: 4px;
+  }
+  .type-card:active { transform: scale(.97); }
+  .type-card.active {
+    border-color: #4361EE; background: #EEF4FF;
+    box-shadow: 0 6px 18px rgba(67,97,238,.16);
+  }
+  .type-card .ico { font-size: 28px; line-height: 1; }
+  .type-card .nm { font-size: 14px; font-weight: 800; color: #2B4C7E; }
+  .type-card .ds { font-size: 11.5px; color: #94A3B8; line-height: 1.4; }
+
+  /* ---- 關卡卡 ---- */
+  .level-card {
+    border: 2px solid #E4ECF8; border-radius: 18px;
+    padding: 16px 15px; margin-bottom: 14px;
+    background: #FBFDFF; position: relative;
+    transition: border-color .15s;
+  }
+  .level-card:focus-within { border-color: #C7D9F7; }
+  .level-card .card-top {
+    display: flex; align-items: center; gap: 10px; margin-bottom: 12px;
+  }
+  .level-badge {
+    background: linear-gradient(135deg, #5B8DEF, #4361EE);
+    color: #fff; font-size: 12.5px; font-weight: 800;
+    padding: 4px 12px; border-radius: 999px; flex: 0 0 auto;
+  }
+  .level-card .del {
+    margin-left: auto; background: #FEF2F2; color: #DC2626;
+    border: 1.5px solid #FECACA; border-radius: 10px;
+    padding: 5px 12px; font-size: 12.5px; font-weight: 700;
+    cursor: pointer; font-family: inherit; transition: background .15s;
+  }
+  .level-card .del:active { background: #FEE2E2; }
+
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  @media (max-width: 520px) { .grid2 { grid-template-columns: 1fr; } }
+
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 7px;
+    border: none; background: linear-gradient(135deg, #5B8DEF, #4361EE);
+    color: #fff; font-size: 16px; font-weight: 700;
+    padding: 14px 36px; border-radius: 999px;
+    cursor: pointer; font-family: inherit;
+    box-shadow: 0 10px 24px rgba(67,97,238,.34);
+    transition: transform .12s, box-shadow .12s;
+    letter-spacing: .5px;
+  }
+  .btn:active { transform: scale(.96); box-shadow: 0 5px 14px rgba(67,97,238,.28); }
+  .btn.ghost {
+    background: #fff; color: #4361EE;
+    border: 2px solid #C7D7F5;
+    box-shadow: 0 4px 12px rgba(67,97,238,.10);
+    font-size: 14.5px; padding: 11px 24px;
+  }
+  .btn.ghost:active { background: #F0F5FF; }
+  .btn.wide { width: 100%; }
+  .btn.big { font-size: 17px; padding: 16px 42px; }
+
+  .add-level {
+    width: 100%; border: 2px dashed #C7D7F5;
+    background: #F8FBFF; color: #4361EE;
+    border-radius: 15px; padding: 13px;
+    font-size: 14.5px; font-weight: 700;
+    cursor: pointer; font-family: inherit;
+    transition: background .15s, border-color .15s;
+  }
+  .add-level:active { background: #EEF4FF; border-color: #9DBEF5; }
+
+  #outputSection { display: none; }
+  #outputSection.show { display: block; }
+
+  .output-box {
+    background: #1E293B; border-radius: 16px; padding: 18px;
+    position: relative; overflow: hidden;
+  }
+  .output-box pre {
+    margin: 0; color: #E2E8F0;
+    font-family: "SF Mono", "Consolas", "Menlo", monospace;
+    font-size: 13px; line-height: 1.75;
+    white-space: pre-wrap; word-break: break-word;
+    max-height: 420px; overflow-y: auto; padding-right: 6px;
+  }
+  .output-box pre::-webkit-scrollbar { width: 7px; }
+  .output-box pre::-webkit-scrollbar-thumb { background: #475569; border-radius: 4px; }
+
+  .copy-bar { display: flex; gap: 10px; margin-top: 14px; flex-wrap: wrap; }
+  .copy-bar .btn { flex: 1; min-width: 130px; }
+
+  .copied-tip {
+    position: fixed; bottom: 34px; left: 50%;
+    transform: translateX(-50%) translateY(24px);
+    background: #16A34A; color: #fff;
+    padding: 12px 28px; border-radius: 999px;
+    font-size: 14.5px; font-weight: 700;
+    box-shadow: 0 10px 28px rgba(22,163,74,.4);
+    opacity: 0; pointer-events: none;
+    transition: all .28s cubic-bezier(.2,.9,.3,1.3);
+    z-index: 200; white-space: nowrap;
+  }
+  .copied-tip.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  .intro-note {
+    background: #FFFBEB; border: 1.5px solid #FDE68A;
+    border-radius: 14px; padding: 13px 16px;
+    font-size: 13.5px; color: #92400E;
+    line-height: 1.7; margin-bottom: 18px;
+  }
+  .intro-note b { color: #B45309; }
+
+  .footer-actions {
+    display: flex; gap: 10px; justify-content: center;
+    flex-wrap: wrap; margin-top: 22px;
+  }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+  <header>
+    <div class="icon">🎮</div>
+    <h1>接接樂遊戲設計工作坊</h1>
+    <p>選一個主題、設計關卡內容，一鍵生成提示詞，貼給 AI 就能做出遊戲！</p>
+  </header>
+
+  <div class="intro-note">
+    💡 <b>怎麼用？</b> 先選主題類型（分類辨識、詞語理解、數學運算…），
+    再依欄位填寫關卡，最後按「生成提示詞」複製貼給 AI。
+  </div>
+
+  <!-- ===== 步驟 1：基本資訊 ===== -->
+  <section class="step">
+    <div class="step-head">
+      <div class="step-num">1</div>
+      <h2>遊戲基本資訊</h2>
+    </div>
+
+    <div class="field">
+      <label>遊戲名稱</label>
+      <input type="text" id="gameTitle" value="接接樂" placeholder="例如：動物分類接接樂">
+    </div>
+
+    <div class="game-info">
+      <div class="field">
+        <label>過關分數 <span class="hint">（達到此分數就過關）</span></label>
+        <input type="text" id="passScore" value="70" placeholder="70">
+      </div>
+      <div class="field">
+        <label>每關掉落項目數</label>
+        <input type="text" id="wordsPerLevel" value="18" placeholder="18">
+      </div>
+      <div class="field">
+        <label>正確項目比例 <span class="hint">（0～1）</span></label>
+        <input type="text" id="goodRatio" value="0.65" placeholder="0.65">
+      </div>
+      <div class="field">
+        <label>漏接扣分</label>
+        <input type="text" id="missPenalty" value="5" placeholder="5">
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== 步驟 2：主題類型 ===== -->
+  <section class="step">
+    <div class="step-head">
+      <div class="step-num">2</div>
+      <h2>選擇主題類型</h2>
+      <div class="sub">這會影響下方關卡<br>要填寫的欄位</div>
+    </div>
+
+    <div class="type-grid" id="typeGrid">
+      <button class="type-card active" data-type="category">
+        <span class="ico">🐾</span>
+        <span class="nm">分類辨識</span>
+        <span class="ds">分辨動物、植物等分類</span>
+      </button>
+      <button class="type-card" data-type="vocab">
+        <span class="ico">📖</span>
+        <span class="nm">詞語理解</span>
+        <span class="ds">接住符合主題的詞語</span>
+      </button>
+      <button class="type-card" data-type="math">
+        <span class="ico">🔢</span>
+        <span class="nm">數學運算</span>
+        <span class="ds">接住正確答案</span>
+      </button>
+      <button class="type-card" data-type="custom">
+        <span class="ico">✨</span>
+        <span class="nm">自訂主題</span>
+        <span class="ds">完全自訂問答內容</span>
+      </button>
+    </div>
+
+    <div class="field" style="margin-top:14px;">
+      <label>主題說明 <span class="hint">（AI 會用這段話理解你的設計意圖）</span></label>
+      <input type="text" id="themeDesc" placeholder="例如：幫助學生分辨哺乳類與非哺乳類動物">
+    </div>
+  </section>
+
+  <!-- ===== 步驟 3：關卡設計 ===== -->
+  <section class="step">
+    <div class="step-head">
+      <div class="step-num">3</div>
+      <h2>設計關卡</h2>
+      <div class="sub" id="levelGuide">每關一個分類主題<br>例如：哺乳類、鳥類</div>
+    </div>
+
+    <div id="levelContainer"></div>
+
+    <button class="add-level" id="addLevelBtn">＋ 新增一個關卡</button>
+  </section>
+
+  <!-- ===== 步驟 4：生成 ===== -->
+  <section class="step">
+    <div class="step-head">
+      <div class="step-num">4</div>
+      <h2>生成提示詞</h2>
+    </div>
+
+    <button class="btn big wide" id="generateBtn">✨ 生成提示詞</button>
+
+    <div id="outputSection" style="margin-top:20px;">
+      <div class="output-box">
+        <pre id="outputText"></pre>
+      </div>
+      <div class="copy-bar">
+        <button class="btn" id="copyBtn">📋 複製提示詞</button>
+        <button class="btn ghost" id="downloadBtn">⬇️ 下載 .txt</button>
+      </div>
+      <p style="font-size:12.5px;color:#94A3B8;text-align:center;margin:14px 0 0;line-height:1.6;">
+        複製後貼給 AI（例如 ChatGPT、Claude），就能生成完整的遊戲程式碼。
+      </p>
+    </div>
+  </section>
+
+  <div class="footer-actions">
+    <button class="btn ghost" id="resetBtn">↺ 清空重填</button>
+    <button class="btn ghost" id="loadDemoBtn">📦 載入示範關卡</button>
+  </div>
+
+</div>
+
+<div class="copied-tip" id="copiedTip">✅ 已複製到剪貼簿！</div>
+
+<script>
+/* =========================================================
+   主題類型定義
+   ========================================================= */
+const THEMES = {
+  category: {
+    label: '分類辨識',
+    themePlaceholder: '例如：幫助學生分辨哺乳類與非哺乳類動物',
+    levelGuide: '每關一個分類主題<br>例如：哺乳類、鳥類',
+    personLabel: '人物身上的分類標籤',
+    personPlaceholder: '例如：哺乳類',
+    goodLabel: '✅ 正確項目（屬於此分類）',
+    goodPlaceholder: '狗、貓、大象、鯨魚',
+    badLabel: '❌ 干擾項目（不屬於此分類）',
+    badPlaceholder: '青蛙、鱷魚、企鵝',
+    itemWord: '動物',
+    sampleName: '哺乳類',
+    sampleCategory: '哺乳類',
+    sampleHint: '接住「哺乳類」動物，其他動物不要接！',
+    sampleGood: '狗、貓、大象、鯨魚、蝙蝠、人類、兔子、猴子',
+    sampleBad: '青蛙、鱷魚、企鵝、蝴蝶、蛇、鯊魚、烏龜',
+    goalText: '幫助學生分辨分類：人物身上寫着一個分類名稱（例如「哺乳類」），上方會掉落各種項目名稱，學生要操控人物去接住「屬於該分類」的項目，避開不屬於該分類的干擾項目。',
+    dropText: '項目名稱氣泡',
+    playerTagDesc: '身體上要清楚顯示分類名稱的標籤',
+    correctWord: '正確項目',
+    badWord: '干擾項目'
+  },
+  vocab: {
+    label: '詞語理解',
+    themePlaceholder: '例如：幫助學生理解與「傷心」有關的詞語',
+    levelGuide: '每關一個主題詞<br>例如：傷心、跑步',
+    personLabel: '人物身上的主題標籤',
+    personPlaceholder: '例如：傷心',
+    goodLabel: '✅ 正確詞語（符合主題）',
+    goodPlaceholder: '難過、流淚、傷心',
+    badLabel: '❌ 干擾詞語（不符合主題）',
+    badPlaceholder: '開心、大笑、歡呼',
+    itemWord: '詞語',
+    sampleName: '傷心',
+    sampleCategory: '傷心',
+    sampleHint: '接住和「傷心」有關的詞語',
+    sampleGood: '難過、流淚、傷心、垂頭喪氣、哭哭啼啼',
+    sampleBad: '興高采烈、歡天喜地、眉開眼笑、手舞足蹈',
+    goalText: '幫助學生理解詞語：人物身上寫着一個主題（例如「傷心」），上方會掉落各種詞語，學生要操控人物去接住「符合該主題」的詞語，避開不符合的干擾詞語。',
+    dropText: '詞語氣泡',
+    playerTagDesc: '身體上要清楚顯示主題的標籤',
+    correctWord: '正確詞語',
+    badWord: '干擾詞語'
+  },
+  math: {
+    label: '數學運算',
+    themePlaceholder: '例如：幫助學生練習 10 以內的加法',
+    levelGuide: '每關一個運算主題<br>例如：加法、減法',
+    personLabel: '人物身上的題目標籤',
+    personPlaceholder: '例如：3 + 4',
+    goodLabel: '✅ 正確答案',
+    goodPlaceholder: '7',
+    badLabel: '❌ 干擾答案',
+    badPlaceholder: '6、8、9',
+    itemWord: '數字',
+    sampleName: '10 以內加法',
+    sampleCategory: '3 + 4',
+    sampleHint: '接住正確的答案！',
+    sampleGood: '7',
+    sampleBad: '6、8、9、5',
+    goalText: '幫助學生練習數學運算：人物身上寫着一道題目（例如「3 + 4」），上方會掉落各種數字，學生要操控人物去接住「正確答案」，避開錯誤的干擾數字。',
+    dropText: '數字氣泡',
+    playerTagDesc: '身體上要清楚顯示題目的標籤',
+    correctWord: '正確答案',
+    badWord: '干擾答案'
+  },
+  custom: {
+    label: '自訂主題',
+    themePlaceholder: '例如：幫助學生認識水果的顏色',
+    levelGuide: '每關一個自訂主題<br>例如：紅色水果、黃色水果',
+    personLabel: '人物身上的主題標籤',
+    personPlaceholder: '例如：紅色水果',
+    goodLabel: '✅ 正確項目',
+    goodPlaceholder: '蘋果、草莓、櫻桃',
+    badLabel: '❌ 干擾項目',
+    badPlaceholder: '香蕉、檸檬、芒果',
+    itemWord: '項目',
+    sampleName: '紅色水果',
+    sampleCategory: '紅色水果',
+    sampleHint: '接住屬於「紅色水果」的項目！',
+    sampleGood: '蘋果、草莓、櫻桃、西瓜、紅莓',
+    sampleBad: '香蕉、檸檬、芒果、鳳梨、哈密瓜',
+    goalText: '幫助學生學習自訂主題：人物身上寫着一個主題（例如「紅色水果」），上方會掉落各種項目，學生要操控人物去接住「符合該主題」的項目，避開不符合的干擾項目。',
+    dropText: '項目名稱氣泡',
+    playerTagDesc: '身體上要清楚顯示主題的標籤',
+    correctWord: '正確項目',
+    badWord: '干擾項目'
+  }
+};
+
+/* =========================================================
+   狀態
+   ========================================================= */
+const state = {
+  themeType: 'category',
+  levels: []
+};
+
+/* =========================================================
+   關卡卡片
+   ========================================================= */
+function createLevelCard(level, index) {
+  const t = THEMES[state.themeType];
+  const div = document.createElement('div');
+  div.className = 'level-card';
+  div.dataset.index = index;
+
+  div.innerHTML = `
+    <div class="card-top">
+      <span class="level-badge">第 ${index + 1} 關</span>
+      <button class="del" data-del="${index}">🗑 刪除</button>
+    </div>
+
+    <div class="grid2">
+      <div class="field">
+        <label>關卡名稱 <span class="hint">（顯示在標題）</span></label>
+        <input type="text" class="lv-name" value="${escAttr(level.name)}" placeholder="例如：${t.sampleName}">
+      </div>
+      <div class="field">
+        <label>${t.personLabel}</label>
+        <input type="text" class="lv-category" value="${escAttr(level.category)}" placeholder="${escAttr(t.personPlaceholder)}">
+      </div>
+    </div>
+
+    <div class="field">
+      <label>提示文字 <span class="hint">（遊戲中顯示在畫面上方）</span></label>
+      <input type="text" class="lv-hint" value="${escAttr(level.hint)}" placeholder="${escAttr(t.sampleHint)}">
+    </div>
+
+    <div class="grid2">
+      <div class="field">
+        <label>${t.goodLabel} <span class="hint">（用、或，分隔）</span></label>
+        <textarea class="lv-good" placeholder="${escAttr(t.goodPlaceholder)}">${escHtml(level.good)}</textarea>
+      </div>
+      <div class="field">
+        <label>${t.badLabel} <span class="hint">（用、或，分隔）</span></label>
+        <textarea class="lv-bad" placeholder="${escAttr(t.badPlaceholder)}">${escHtml(level.bad)}</textarea>
+      </div>
+    </div>
+  `;
+
+  return div;
+}
+
+function renderLevels() {
+  const container = document.getElementById('levelContainer');
+  container.innerHTML = '';
+  state.levels.forEach((lv, i) => {
+    container.appendChild(createLevelCard(lv, i));
+  });
+  document.getElementById('levelGuide').innerHTML = THEMES[state.themeType].levelGuide;
+}
+
+function syncLevelsFromDOM() {
+  document.querySelectorAll('.level-card').forEach(card => {
+    const i = parseInt(card.dataset.index, 10);
+    if (isNaN(i)) return;
+    state.levels[i] = {
+      name: card.querySelector('.lv-name').value.trim(),
+      category: card.querySelector('.lv-category').value.trim(),
+      hint: card.querySelector('.lv-hint').value.trim(),
+      good: card.querySelector('.lv-good').value.trim(),
+      bad: card.querySelector('.lv-bad').value.trim()
+    };
+  });
+}
+
+/* =========================================================
+   主題切換
+   ========================================================= */
+function switchTheme(type) {
+  if (!THEMES[type]) return;
+
+  syncLevelsFromDOM();
+  state.themeType = type;
+
+  document.querySelectorAll('.type-card').forEach(c => {
+    c.classList.toggle('active', c.dataset.type === type);
+  });
+
+  const t = THEMES[type];
+  document.getElementById('themeDesc').placeholder = t.themePlaceholder;
+  document.getElementById('levelGuide').innerHTML = t.levelGuide;
+
+  const hasContent = state.levels.some(lv => lv.category || lv.good || lv.bad);
+  if (!hasContent) {
+    loadThemeDemo(type);
+  } else {
+    renderLevels();
+  }
+}
+
+function loadThemeDemo(type) {
+  const t = THEMES[type];
+  state.levels = [
+    {
+      name: t.sampleName,
+      category: t.sampleCategory,
+      hint: t.sampleHint,
+      good: t.sampleGood,
+      bad: t.sampleBad
+    }
+  ];
+  renderLevels();
+}
+
+/* =========================================================
+   提示詞生成
+   ========================================================= */
+function splitWords(str) {
+  return str.split(/[、,，\n]/).map(s => s.trim()).filter(Boolean);
+}
+
+function generatePrompt() {
+  syncLevelsFromDOM();
+
+  const t = THEMES[state.themeType];
+  const title = document.getElementById('gameTitle').value.trim() || '接接樂';
+  const themeDesc = document.getElementById('themeDesc').value.trim() || t.themePlaceholder;
+  const passScore = document.getElementById('passScore').value.trim() || '70';
+  const wordsPerLevel = document.getElementById('wordsPerLevel').value.trim() || '18';
+  const goodRatio = document.getElementById('goodRatio').value.trim() || '0.65';
+  const missPenalty = document.getElementById('missPenalty').value.trim() || '5';
+
+  const validLevels = state.levels.filter(lv =>
+    lv && (lv.category || splitWords(lv.good).length || splitWords(lv.bad).length)
+  );
+
+  if (!validLevels.length) {
+    showToast('⚠️ 請至少填寫一個關卡的內容');
+    return null;
+  }
+
+  let lines = [];
+
+  lines.push(`請幫我生成一個完整的「${title}」網頁遊戲，使用 HTML + CSS + JavaScript（單一檔案，可直接在瀏覽器打開運行）。`);
+  lines.push('');
+  lines.push('【遊戲目標】');
+  lines.push(`${t.goalText}`);
+  lines.push(`教學目標：${themeDesc}`);
+  lines.push('');
+  lines.push('【核心玩法】');
+  lines.push(`- 每關有一個主題，人物身上會顯示該主題的名稱。`);
+  lines.push(`- 畫面頂部會不斷掉落${t.dropText}，其中約 ${goodRatio} 是屬於該主題的${t.correctWord}，其餘是${t.badWord}。`);
+  lines.push('- 玩家用鍵盤（← → 或 A/D）或手機觸控（按住畫面左右拖動）控制底部人物左右移動，人物頭上有一個籃子。');
+  lines.push(`- 接住${t.correctWord} +10 分，接住${t.badWord} -5 分（分數最低為 0）。`);
+  lines.push(`- 漏接${t.correctWord} -${missPenalty} 分；${t.badWord}掉下去不扣分。`);
+  lines.push(`- 每關得分達到 ${passScore} 分即可過關，並可進入下一關。`);
+  lines.push('');
+  lines.push('【關卡資料結構】');
+  lines.push('請設計一個 LEVELS 陣列，每個關卡包含：');
+  lines.push('- name：關卡名稱');
+  lines.push(`- category：人物身上顯示的${t.personLabel.replace('人物身上的', '')}`);
+  lines.push('- hint：提示文字');
+  lines.push('- items：項目陣列，每項包含 text（顯示文字）與 good（是否正確，true/false）');
+  lines.push('');
+  lines.push(`請提供 ${validLevels.length} 個關卡，內容如下：`);
+  lines.push('');
+
+  validLevels.forEach((lv, i) => {
+    const goodList = splitWords(lv.good);
+    const badList = splitWords(lv.bad);
+    lines.push(`第 ${i + 1} 關：${lv.name || lv.category}`);
+    lines.push(`- 主題名稱：${lv.category}`);
+    lines.push(`- 提示文字：${lv.hint || `接住正確的${t.itemWord}！`}`);
+    lines.push(`- ${t.correctWord}：${goodList.join('、')}`);
+    lines.push(`- ${t.badWord}：${badList.join('、')}`);
+    lines.push('');
+  });
+
+  lines.push('【畫面與互動】');
+  lines.push('- 使用 Canvas 繪製遊戲畫面。');
+  lines.push('- 背景是柔和的漸層色。');
+  lines.push(`- 掉落的${t.dropText}是圓角矩形，有柔和陰影和不同粉彩顏色。`);
+  lines.push(`- 人物是簡單可愛的卡通造型（圓形頭、身體、雙手舉起籃子），${t.playerTagDesc}。`);
+  lines.push(`- 接對時顯示綠色「+10」飄字和粒子效果；接錯時顯示紅色「−5」飄字、粒子效果，並讓畫面輕微震動；漏接時顯示橘色「漏接 −${missPenalty}」提示。`);
+  lines.push('- 有簡單音效（使用 Web Audio API 的嗶聲即可），接對高音、接錯低音。');
+  lines.push('- 響應式設計，適用手機和電腦。');
+  lines.push('');
+  lines.push('【遊戲流程】');
+  lines.push('- 一開始顯示選單，有「開始遊戲」按鈕和玩法說明。');
+  lines.push('- 每關結束後顯示結算畫面：得分、接對次數、接錯次數、漏接次數、答對率。');
+  lines.push('- 若過關，按鈕顯示「下一關」；若最後一關過關，顯示「再玩一次」；若未過關，顯示「再試一次」。');
+  lines.push('');
+  lines.push('【程式碼要求】');
+  lines.push('- 單一 HTML 檔案，包含所有 CSS 和 JS。');
+  lines.push('- 使用 Canvas 2D 繪圖。');
+  lines.push('- 程式碼結構清晰，有註解。');
+  lines.push('- 不要使用任何外部函式庫（jQuery、Bootstrap 等）。');
+  lines.push('- 字型使用系統中文字型（如 "PingFang TC", "Microsoft JhengHei"）。');
+  lines.push('- 請確保遊戲在手機上也能順暢運行。');
+  lines.push('');
+  lines.push('請直接輸出完整的程式碼，不要只給片段。');
+
+  return lines.join('\n');
+}
+
+/* =========================================================
+   事件
+   ========================================================= */
+document.getElementById('typeGrid').addEventListener('click', e => {
+  const card = e.target.closest('.type-card');
+  if (!card) return;
+  switchTheme(card.dataset.type);
+});
+
+document.getElementById('addLevelBtn').addEventListener('click', () => {
+  syncLevelsFromDOM();
+  state.levels.push({ name: '', category: '', hint: '', good: '', bad: '' });
+  renderLevels();
+  const cards = document.querySelectorAll('.level-card');
+  const last = cards[cards.length - 1];
+  if (last) {
+    last.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    const firstInput = last.querySelector('input');
+    if (firstInput) setTimeout(() => firstInput.focus(), 350);
+  }
+});
+
+document.getElementById('levelContainer').addEventListener('click', e => {
+  const btn = e.target.closest('[data-del]');
+  if (!btn) return;
+  const idx = parseInt(btn.dataset.del, 10);
+  syncLevelsFromDOM();
+  if (state.levels.length <= 1) {
+    showToast('⚠️ 至少保留一個關卡');
+    return;
+  }
+  if (!confirm(`確定刪除第 ${idx + 1} 關？`)) return;
+  state.levels.splice(idx, 1);
+  renderLevels();
+});
+
+document.getElementById('generateBtn').addEventListener('click', () => {
+  const prompt = generatePrompt();
+  if (!prompt) return;
+  document.getElementById('outputText').textContent = prompt;
+  document.getElementById('outputSection').classList.add('show');
+  setTimeout(() => {
+    document.getElementById('outputSection').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, 100);
+});
+
+document.getElementById('copyBtn').addEventListener('click', async () => {
+  const text = document.getElementById('outputText').textContent;
+  if (!text) return;
+  try {
+    await navigator.clipboard.writeText(text);
+    showCopied();
+  } catch (err) {
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.position = 'fixed';
+    ta.style.opacity = '0';
+    document.body.appendChild(ta);
+    ta.select();
+    try { document.execCommand('copy'); showCopied(); }
+    catch (e) { showToast('❌ 複製失敗，請手動選取複製'); }
+    document.body.removeChild(ta);
+  }
+});
+
+document.getElementById('downloadBtn').addEventListener('click', () => {
+  const text = document.getElementById('outputText').textContent;
+  if (!text) return;
+  const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = '遊戲提示詞.txt';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+  showToast('✅ 已下載提示詞檔案');
+});
+
+document.getElementById('resetBtn').addEventListener('click', () => {
+  if (!confirm('確定清空所有內容？')) return;
+  state.levels = [{ name: '', category: '', hint: '', good: '', bad: '' }];
+  renderLevels();
+  document.getElementById('outputSection').classList.remove('show');
+  document.getElementById('gameTitle').value = '接接樂';
+  document.getElementById('themeDesc').value = '';
+  document.getElementById('passScore').value = '70';
+  document.getElementById('wordsPerLevel').value = '18';
+  document.getElementById('goodRatio').value = '0.65';
+  document.getElementById('missPenalty').value = '5';
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+  showToast('已清空，可以重新開始設計');
+});
+
+document.getElementById('loadDemoBtn').addEventListener('click', () => {
+  loadThemeDemo(state.themeType);
+  showToast('已載入「' + THEMES[state.themeType].label + '」示範關卡');
+});
+
+/* =========================================================
+   小工具
+   ========================================================= */
+function escAttr(s) {
+  return String(s == null ? '' : s)
+    .replace(/&/g, '&amp;').replace(/"/g, '&quot;')
+    .replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+function escHtml(s) {
+  return String(s == null ? '' : s)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+const tip = document.getElementById('copiedTip');
+function showCopied() {
+  tip.textContent = '✅ 已複製到剪貼簿！';
+  tip.classList.add('show');
+  clearTimeout(showCopied._t);
+  showCopied._t = setTimeout(() => tip.classList.remove('show'), 1900);
+}
+function showToast(msg) {
+  tip.textContent = msg;
+  tip.classList.add('show');
+  clearTimeout(showToast._t);
+  showToast._t = setTimeout(() => tip.classList.remove('show'), 1900);
+}
+
+/* =========================================================
+   啟動
+   ========================================================= */
+loadThemeDemo('category');
+</script>
+</body>
+</html>
